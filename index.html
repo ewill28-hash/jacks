@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘의 날짜와 시계</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;500;700&display=swap');
+
+        body {
+            background: radial-gradient(circle at center, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Noto Sans KR', sans-serif;
+            color: #e94560;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .clock-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 3rem;
+            border-radius: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 6rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            letter-spacing: -2px;
+            text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+        }
+
+        .date {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: #95a5a6;
+            letter-spacing: 2px;
+        }
+
+        .seconds {
+            font-size: 2.5rem;
+            color: rgba(233, 69, 96, 0.6);
+            margin-left: 0.5rem;
+        }
+
+        @media (max-width: 640px) {
+            .time { font-size: 3.5rem; }
+            .date { font-size: 1.1rem; }
+            .seconds { font-size: 1.5rem; }
+            .clock-container { padding: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="clock-container">
+        <div id="date" class="date">----년 --월 --일 ---요일</div>
+        <div class="time">
+            <span id="hours-mins">00:00</span><span id="seconds" class="seconds">00</span>
+        </div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            
+            // 날짜 처리
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const date = now.getDate();
+            const dayNames = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+            const day = dayNames[now.getDay()];
+            
+            // 시간 처리
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            // DOM 업데이트
+            document.getElementById('date').innerText = `${year}년 ${month}월 ${date}일 ${day}`;
+            document.getElementById('hours-mins').innerText = `${hours}:${minutes}`;
+            document.getElementById('seconds').innerText = seconds;
+        }
+
+        // 초기 실행 및 매초 업데이트
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
