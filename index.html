@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Songdo Pickleball (supr)</title>
+    <title>SamTennis</title>
     
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -20,12 +20,12 @@
                 extend: {
                     colors: {
                         pickle: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            900: '#064e3b',
+                                50: '#f0f9ff',
+                                100: '#e0f2fe',
+                                500: '#0ea5e9',
+                                600: '#0284c7',
+                                700: '#0369a1',
+                                900: '#0c4a6e',
                         }
                     }
                 }
@@ -33,13 +33,14 @@
         }
     </script>
 
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Firebase SDKs -->
+    <!-- Firebase App (Compat) & Services -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; }
@@ -54,29 +55,29 @@
     <div id="root"></div>
 
     <script type="text/babel">
-	//SDPC-L3+k1.1(224)  -오전 9:17 2026-02-25
+
 
         // --- Configuration & Constants ---
         const INITIAL_RATING = 3.000;
         const K_FACTOR = 0.11;
-        
-        const PWD_HISTORY_DEL_ONE = "3";
-        const PWD_MEMBER_TAB = "3";
-        const PWD_ADMIN = "3";
-        const PWD_MEMBER_DEL_ONE = "3";
-
+        let SDS_HISTORY_DEL_ONE = "0.12";
+        let SDS_MEMBER_TAB = "0.13";
+        let SDS_ADMIN = "0.14";
+        let SDS_MEMBER_DEL_ONE = "0.15";
         const ITEMS_PER_PAGE = 20;
-        const MIN_PARTNER_MATCHES = 5; // 파트너 통계 최소 경기 수
+        const MIN_PARTNER_MATCHES = 5; 
+        const { useState, useEffect, useRef } = React;
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "",
-            authDomain: "placeholder.firebaseapp.com",
-            projectId: "placeholder",
-            storageBucket: "placeholder.appspot.com",
-            messagingSenderId: "0",
-            appId: "0"
+        // --- Firebase Config ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD1pj4uw9LyUUTtWn_a28ABN0BC-0zkynY",
+            authDomain: "tele-486906.firebaseapp.com",
+            projectId: "tele-486906",
+            storageBucket: "tele-486906.firebasestorage.app",
+            messagingSenderId: "780009385301",
+            appId: "1:780009385301:web:4163b27573a0b5e72e13dc"
         };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'songdo-pickleball';
+        const appId = "SamTe-QrnjqH7vDCtdAB94IL2H";
 
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
@@ -304,6 +305,7 @@
 
         const App = () => {
             const [user, setUser] = React.useState(null);
+            const [db, setDb] = useState(null);
             const [tab, setTab] = React.useState('match');
             const [members, setMembers] = React.useState([]);
             const [matches, setMatches] = React.useState([]);
@@ -316,8 +318,8 @@
 
             const [teamA, setTeamA] = React.useState([]);
             const [teamB, setTeamB] = React.useState([]);
-            const [scoreA, setScoreA] = React.useState(11);
-            const [scoreB, setScoreB] = React.useState(11);
+            const [scoreA, setScoreA] = React.useState(6);
+            const [scoreB, setScoreB] = React.useState(6);
             const [newMemberText, setNewMemberText] = React.useState("");
             const [isAdmin, setIsAdmin] = React.useState(false);
             const [adminPwdInput, setAdminPwdInput] = React.useState("");
@@ -329,25 +331,83 @@
             const [bulkText, setBulkText] = React.useState("");
             const [adminSort, setAdminSort] = React.useState('name');
 
-            React.useEffect(() => {
-                const initAuth = async () => {
+            // Initialize Firebase inside Babel script
+            useEffect(() => {
+                const init = async () => {
                     try {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await auth.signInWithCustomToken(__initial_auth_token);
+                        // Firebase 앱 초기화 (Compat 버전은 전역 firebase 객체 사용)
+                        let app;
+                        if (!firebase.apps.length) {
+                            app = firebase.initializeApp(firebaseConfig);
                         } else {
-                            await auth.signInAnonymously();
+                            app = firebase.app();
                         }
-                    } catch (e) { console.error("Auth error:", e); }
+
+                        const auth = app.auth();
+                        const firestore = app.firestore();
+                        setDb(firestore);
+
+                        // Auth Logic
+                        const handleAuth = async () => {
+                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                try {
+                                    await auth.signInWithCustomToken(__initial_auth_token);
+                                } catch (e) {
+                                    await auth.signInAnonymously();
+                                }
+                            } else {
+                                await auth.signInAnonymously();
+                            }
+                        };
+
+                        await handleAuth();
+                        auth.onAuthStateChanged(u => setUser(u));
+                    } catch (err) {
+                        console.error("Firebase Init Error:", err);
+                    }
                 };
-                initAuth();
-                const unsubscribe = auth.onAuthStateChanged((u) => setUser(u));
-                return () => unsubscribe();
+                init();
+                
+
+                
             }, []);
+
+
 
             React.useEffect(() => {
                 if (!user) return;
                 const memberPath = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('members');
                 const matchPath = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('matches');
+
+
+//////////////////////
+            const matchRef = db.collection('artifacts').doc(appId)
+                            .collection('public').doc('data')
+                            .collection('games').doc('maxgame2'); 
+            matchRef.get().then((doc) => {
+                if (doc.exists) {
+                    return SDS_MEMBER_TAB = doc.data().value4;
+                    }
+                });
+            matchRef.get().then((doc) => {
+                if (doc.exists) {
+                    return SDS_ADMIN = doc.data().value4;
+                    }
+                });
+            matchRef.get().then((doc) => {
+                if (doc.exists) {
+                    return SDS_MEMBER_DEL_ONE = doc.data().value4;
+                    }
+                });
+            matchRef.get().then((doc) => {
+                if (doc.exists) {
+                    return SDS_HISTORY_DEL_ONE = doc.data().value4;
+                    }
+                });
+//////////////////////
+
+
+
 
                 const unsubMembers = memberPath.onSnapshot(snap => {
                     const list = [];
@@ -355,6 +415,7 @@
                     list.sort((a, b) => a.name.localeCompare(b.name));
                     setMembers(list);
                 });
+
 
                 const unsubMatches = matchPath.onSnapshot(snap => {
                     const list = [];
@@ -605,7 +666,7 @@
                 try {
                     await batch.commit();
                     showToast("결과 저장 완료");
-                    setTeamA([]); setTeamB([]); setScoreA(11); setScoreB(11);
+                    setTeamA([]); setTeamB([]); setScoreA(6); setScoreB(6);
                 } catch (e) { showToast("저장 실패"); }
             };
 
@@ -749,7 +810,7 @@
                 const now = new Date();
                 const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
                 link.setAttribute("href", url);
-                link.setAttribute("download", `sdpc_members_${dateStr}.csv`);
+                link.setAttribute("download", `stc_members_${dateStr}.csv`);
                 link.style.visibility = 'hidden';
                 document.body.appendChild(link); link.click(); document.body.removeChild(link);
                 showToast("선수 명단 다운로드 완료");
@@ -827,7 +888,7 @@
                 const now = new Date();
                 const dateStr2 = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
                 link.setAttribute("href", url);
-                link.setAttribute("download", `sdpc_history_${historyFilter}_${dateStr2}.csv`);
+                link.setAttribute("download", `stc_history_${historyFilter}_${dateStr2}.csv`);
                 link.style.visibility = 'hidden';
                 document.body.appendChild(link); link.click(); document.body.removeChild(link);
                 showToast("기록 다운로드 완료");
@@ -1003,7 +1064,7 @@
                                     <Icon name="history" size={15} /> 경기 기록 보기
                                 </button>
                                 <div className="p-4 bg-slate-50 flex justify-center border-t mt-2">
-                                    <span className="text-[10px] text-slate-400 font-black tracking-widest">Enjoy Pickleball</span>
+                                    <span className="text-[10px] text-slate-400 font-black tracking-widest">Enjoy Tennis</span>
                                 </div>  
                             </div>
                         )}
@@ -1012,7 +1073,7 @@
                     <header className="bg-white border-b sticky top-0 z-40 px-4 py-3 shadow-sm">
                         <div className="flex items-center justify-between mb-2">
                             <h1 className="text-xl font-extrabold flex items-center gap-2 text-slate-900">
-                                <span className="bg-pickle-600 text-white p-1 rounded-lg">sdpc</span> Songdo Pickleball L3+(0224)
+                                <span className="bg-pickle-600 text-white p-1 rounded-lg">stc</span>Three Circles Tennis
                             </h1>
                             <div className={`w-2.5 h-2.5 rounded-full ${loading ? 'bg-yellow-400 animate-pulse' : 'bg-green-500 shadow-sm'}`}></div>
                         </div>
@@ -1026,7 +1087,7 @@
                             ].map(item => (
                                 <button key={item.id} onClick={() => {
                                     if (item.id === 'member') {
-                                        openPwd(PWD_MEMBER_TAB, "멤버 관리 접근", () => setTab(item.id));
+                                        openPwd(SDS_MEMBER_TAB, "멤버 관리 접근", () => setTab(item.id));
                                     } else {
                                         setTab(item.id);
                                     }
@@ -1079,7 +1140,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button onClick={saveMatch} className="w-full py-2 bg-emerald-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 flex justify-center items-center gap-3 active:scale-95 transition-transform">
+                                <button onClick={saveMatch} className="w-full py-2 bg-sky-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-sky-600/20 hover:bg-sky-700 flex justify-center items-center gap-3 active:scale-95 transition-transform">
                                     <Icon name="save" size={28} /> 경기 결과 저장
                                 </button>
                                 <div>
@@ -1116,7 +1177,7 @@
                                     </div>
                                 </div>
                                 <div className="p-4 bg-slate-50 flex justify-center border-t">
-                                    <span className="text-[10px] text-slate-400 italic font-black tracking-widest">Enjoy Pickleball</span>
+                                    <span className="text-[10px] text-slate-400 italic font-black tracking-widest">Enjoy Tennis</span>
                                 </div>
                             </div>
                         )}
@@ -1142,9 +1203,20 @@
                                         <button onClick={() => setShowBulkUpload(true)} className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-emerald-50 text-emerald-600 rounded-xl text-[11px] font-black hover:bg-emerald-100 transition-colors">
                                             <Icon name="upload" size={14} /> 일괄 업로드
                                         </button>
-                                        <button onClick={downloadHistoryCSV} className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-slate-50 text-slate-600 rounded-xl text-[11px] font-black hover:bg-slate-100 transition-colors">
-                                            <Icon name="download" size={14} /> 기록 다운로드
+                                        <button onClick={() => openPwd(SDS_HISTORY_DEL_ONE, "기록 다운로드", async () => {
+                                            try {
+                                                await downloadHistoryCSV();
+                                                // 필요 시 성공 메시지 추가
+                                                // showToast("다운로드가 완료되었습니다.");
+                                            } catch (e) { 
+                                                showToast("다운로드 중 오류가 발생했습니다."); 
+                                            }
+                                            })} 
+                                            className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-slate-50 text-slate-600 rounded-xl text-[11px] font-black hover:bg-slate-100 transition-colors"
+                                        >
+                                        <Icon name="download" size={14} /> $기록 다운로드
                                         </button>
+
                                     </div>
                                 </div>
                                 {showBulkUpload && (
@@ -1162,10 +1234,10 @@
                                     <span>총 <span className="text-emerald-500 text-xs">{allFilteredMatches.length}</span>건 <span className="font-medium text-[10px]">(최신 기록순 정렬)</span></span>
                                 </div>
 
-                                <div className="space-y-3.5">
+                                <div className="space-y-1.5">
                                     {currentMatches.map(m => (
-                                        <div key={m.id} className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 group relative overflow-hidden fade-in">
-                                            <div className="flex justify-between items-start mb-4">
+                                        <div key={m.id} className="bg-white rounded-3xl p-2 shadow-sm border border-gray-100 group relative overflow-hidden fade-in">
+                                            <div className="flex justify-between items-start mb-2">
                                                 <div className="flex flex-col gap-1.5">
                                                     <div className="text-[10px] text-gray-400 font-black bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 w-fit">{formatDate(m.createdAt)}</div>
                                                     <div className="text-[10px] font-black text-slate-500 flex items-baseline">
@@ -1173,7 +1245,7 @@
                                                         <span className="text-[8px] text-slate-300 font-mono font-medium ml-1.5">doc:{m.id.substring(0,5)}</span>
                                                     </div>
                                                 </div>
-                                                <button onClick={() => openPwd(PWD_HISTORY_DEL_ONE, "경기 기록 삭제", async () => {
+                                                <button onClick={() => openPwd(SDS_HISTORY_DEL_ONE, "경기 기록 삭제", async () => {
                                                     try {
                                                         await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('matches').doc(m.id).delete();
                                                         showToast("기록이 삭제되었습니다.");
@@ -1254,7 +1326,7 @@
                                     </div>
                                 )}
                                 <div className="p-4 bg-slate-50 flex justify-center border-t">
-                                    <span className="text-[10px] text-slate-400 italic font-black tracking-widest">Enjoy Pickleball</span>
+                                    <span className="text-[10px] text-slate-400 italic font-black tracking-widest">Enjoy Tennis</span>
                                 </div>                                
                             </div>
                         )}
@@ -1320,7 +1392,7 @@
                                     </div>
                                 </div>
                                 <div className="p-4 bg-slate-50 flex justify-center border-t">
-                                    <span className="text-[10px] text-slate-400 italic font-black tracking-widest">Enjoy Pickleball</span>
+                                    <span className="text-[10px] text-slate-400 italic font-black tracking-widest">Enjoy Tennis</span>
                                 </div>
                             </div>
                         )}
@@ -1332,7 +1404,7 @@
                                         <input type="password" inputMode="numeric" placeholder="****" className="border-2 p-4 rounded-2xl w-full max-w-[160px] text-center mb-6 outline-none focus:border-pickle-500 transition-all text-2xl tracking-[1em] font-black" 
                                             value={adminPwdInput} onChange={e => {
                                                 setAdminPwdInput(e.target.value);
-                                                if (e.target.value === PWD_ADMIN) setIsAdmin(true);
+                                                if (e.target.value === SDS_ADMIN) setIsAdmin(true);
                                             }} />
                                         <p className="text-xs text-slate-400 font-black uppercase tracking-widest">Administrator Login</p>
                                     </div>
@@ -1385,7 +1457,7 @@
                                     </div>
                                 )}
                                 <div className="p-4 bg-slate-50 flex justify-center border-t">
-                                    <span className="text-[10px] text-slate-400 italic font-black tracking-widest">Enjoy Pickleball</span>
+                                    <span className="text-[10px] text-slate-400 italic font-black tracking-widest">Enjoy Tennis</span>
                                 </div>
                             </div>
                         )}
@@ -1430,7 +1502,7 @@
                                                 <Icon name="chevron-right" size={18} className="text-gray-300 group-hover:text-pickle-400 transition-colors" />
                                                 <button onClick={(e) => {
                                                     e.stopPropagation();
-                                                    openPwd(PWD_MEMBER_DEL_ONE, "@멤버 삭제", async () => {
+                                                    openPwd(SDS_MEMBER_DEL_ONE, "@멤버 삭제", async () => {
                                                         await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('members').doc(m.id).delete();
                                                         showToast(`${m.name} 삭제 완료!`);
                                                     });
@@ -1442,7 +1514,7 @@
                                     ))}
                                 </div>
                                 <div className="p-4 bg-slate-50 flex justify-center border-t">
-                                    <span className="text-[10px] text-slate-400 italic font-black tracking-widest">Enjoy Pickleball</span>
+                                    <span className="text-[10px] text-slate-400 italic font-black tracking-widest">Enjoy Tennis</span>
                                 </div>
                             </div>
                         )}
